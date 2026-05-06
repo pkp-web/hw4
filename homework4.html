@@ -3,7 +3,7 @@
 <!--
 Program: homework4.html
 Author: Prerak Patel
-Date Modified: 2026-04-20
+Date Modified: 2026-05-06
 Description: Medical registration form with Fetch API, iFrame, cookies, and local storage
 -->
 
@@ -137,7 +137,7 @@ Description: Medical registration form with Fetch API, iFrame, cookies, and loca
                     <input type="text" id="zip" name="zip" size="10" minlength="5" maxlength="10" required
                         pattern="\d{5}(-\d{4})?"
                         title="Required. Enter a 5-digit ZIP code or ZIP+4 format (e.g. 77002 or 77002-1234)."
-                        onblur="validateZip(); saveToStorage('zip')">
+                        onblur="validateZip(); saveToStorage('zip'); autoFillFromZip()">
                     <br><span class="error" id="zipError"></span>
                 </th>
             </tr>
