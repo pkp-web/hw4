@@ -1,6 +1,4 @@
-// =====================
 // DATE
-// =====================
 const currentDate = new Date();
 document.getElementById("date").textContent = currentDate.toLocaleDateString();
 
@@ -12,9 +10,8 @@ document.getElementById("dob").setAttribute("max", maxDate);
 document.getElementById("dob").setAttribute("min", minDate);
 
 
-// =====================
+
 // FETCH API - Load States
-// =====================
 fetch("states.html")
     .then(response => {
         if (!response.ok) throw new Error("Could not load states.");
@@ -34,9 +31,7 @@ fetch("states.html")
     });
 
 
-// =====================
 // COOKIES
-// =====================
 function setCookie(name, value, hours) {
     let expires = "";
     if (hours) {
@@ -64,9 +59,8 @@ function deleteCookie(name) {
 }
 
 
-// =====================
+
 // PAGE LOAD - Check Cookie and Restore Local Storage
-// =====================
 window.onload = function () {
     let savedName = getCookie("fname");
 
@@ -89,9 +83,8 @@ window.onload = function () {
 };
 
 
-// =====================
+
 // NOT ME - Clear cookie and storage
-// =====================
 function handleNotMe() {
     let checkbox = document.getElementById("notMeCheck");
     if (checkbox.checked) {
@@ -106,9 +99,8 @@ function handleNotMe() {
 }
 
 
-// =====================
+
 // LOCAL STORAGE - Save and Restore
-// =====================
 function saveToStorage(fieldId) {
     let val = document.getElementById(fieldId).value;
     localStorage.setItem(fieldId, val);
@@ -360,6 +352,40 @@ function validateZip() {
     clearError("zipError");
     return true;
 }
+
+// ZIP CODE AUTO-FILL API
+function autoFillFromZip() {
+    let zip = document.getElementById("zip").value.trim();
+
+    // Only run if zip is exactly 5 digits
+    if (!/^\d{5}$/.test(zip)) return;
+
+    fetch("https://api.zippopotam.us/us/" + zip)
+        .then(response => {
+            if (!response.ok) throw new Error("ZIP not found.");
+            return response.json();
+        })
+        .then(data => {
+            let city = data.places[0]["place name"];
+            let state = data.places[0]["state abbreviation"];
+
+            document.getElementById("city").value = city;
+            document.getElementById("state").value = state;
+
+            // Save to local storage since we auto filled
+            saveToStorage("city");
+            saveToStorage("state");
+
+            // Clear any existing errors on city and state
+            clearError("cityError");
+            clearError("stateError");
+        })
+        .catch(error => {
+            showError("zipError", "Could not find city/state for this ZIP code.");
+            console.error("ZIP API error:", error);
+        });
+}
+
 
 function validateEmail() {
     let val = document.getElementById("email").value.trim().toLowerCase();
