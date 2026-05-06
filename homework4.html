@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<!--
+Program: homework4.html
+Author: Prerak Patel
+Date Modified: 2026-04-20
+Description: Medical registration form with Fetch API, iFrame, cookies, and local storage
+-->
+
+<html>
+
+<head>
+    <title>Medical Registration Form</title>
+    <link rel="stylesheet" href="hw4style.css">
+</head>
+
+<body>
+
+    <!-- STICKY HEADER -->
+    <div id="header">
+        <img src="CougarMedicine.png" alt="Cougarville Doctors Logo">
+        <h1>Cougarville Doctors</h1>
+        <h2>Medical Registration Form</h2>
+        <h3 id="date"></h3>
+        <h3 id="welcomeMsg"></h3>
+        <div id="newUserDiv" style="display:none;">
+            <input type="checkbox" id="notMeCheck" onchange="handleNotMe()">
+            <label for="notMeCheck" id="notMeLabel"></label>
+        </div>
+    </div>
+
+
+
+    <!-- IFRAME -->
+    <div id="iframeContainer">
+        <h3>Our Location</h3>
+        <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3464.664228306979!2d-95.34243492358!3d29.71995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640c0b3b0b3b0b3%3A0x0!2sUniversity+of+Houston!5e0!3m2!1sen!2sus!4v1234567890"
+            width="600" height="300" style="border:1px solid #1f5fa6; border-radius:8px;" allowfullscreen=""
+            loading="lazy" title="University of Houston Location">
+        </iframe>
+    </div>
+
+    <hr>
+
+    <form name="registration" action="thankyou.html" onsubmit="return finalSubmitCheck()">
+        <table>
+
+            <!-- Name -->
+            <tr align="left">
+                <th>Name</th>
+                <td>
+                    <label for="fname">&nbsp;<b>First</b></label><br>
+                    <input type="text" id="fname" name="fname" maxlength="30" required pattern="[A-Za-z'-]{1,30}"
+                        title="First name: 1-30 characters, letters only"
+                        onblur="validateFname(); saveToStorage('fname')" oninput="saveToStorage('fname')">
+                    <span class="error" id="fnameError"></span>
+                </td>
+                <td>
+                    <label for="mi">&nbsp;<b>M.I.</b></label><br>
+                    <input type="text" id="mi" name="mi" maxlength="1" size="3" pattern="[A-Za-z]"
+                        title="Middle initial: one letter only, optional" onblur="validateMi(); saveToStorage('mi')">
+                    <span class="error" id="miError"></span>
+                </td>
+                <td>
+                    <label for="lname">&nbsp;<b>Last</b></label><br>
+                    <input type="text" id="lname" name="lname" maxlength="30" required pattern="[A-Za-z'-]{1,30}"
+                        title="Last name: 1-30 characters, letters only"
+                        onblur="validateLname(); saveToStorage('lname')">
+                    <span class="error" id="lnameError"></span>
+                </td>
+            </tr>
+
+            <!-- Date of Birth -->
+            <tr align="left">
+                <th><label for="dob">Date of Birth</label></th>
+                <td colspan="3">
+                    <input type="date" id="dob" name="dob" required
+                        title="Enter your date of birth. Must not be in the future or more than 120 years ago."
+                        onblur="validateDob(); saveToStorage('dob')">
+                    <br><span class="error" id="dobError"></span>
+                </td>
+            </tr>
+
+            <!-- Social Security -->
+            <tr align="left">
+                <th><label for="social">Social Security</label></th>
+                <td colspan="3">
+                    <input type="password" id="social" name="social" maxlength="11" required
+                        title="Enter your 9-digit SSN. It will be formatted as 123-45-6789 automatically."
+                        oninput="formatSSN(this)" onblur="validateSSN()">
+                    <br><span class="error" id="socialError"></span>
+                </td>
+            </tr>
+
+            <!-- Address 1 -->
+            <tr align="left">
+                <th><label for="address1">Street Address 1</label></th>
+                <td colspan="3">
+                    <input type="text" id="address1" name="address1" minlength="2" maxlength="30" required
+                        title="Required. Enter your street address, 2-30 characters."
+                        onblur="validateAddress1(); saveToStorage('address1')">
+                    <br><span class="error" id="address1Error"></span>
+                </td>
+            </tr>
+
+            <!-- Address 2 -->
+            <tr align="left">
+                <th><label for="address2">Street Address 2</label></th>
+                <td colspan="3">
+                    <input type="text" id="address2" name="address2" minlength="2" maxlength="30"
+                        title="Optional. Apartment, suite, etc. If entered, must be 2-30 characters."
+                        onblur="validateAddress2(); saveToStorage('address2')">
+                    <br><span class="error" id="address2Error"></span>
+                </td>
+            </tr>
+
+            <!-- City, State, ZIP -->
+            <tr align="left">
+                <th>
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" maxlength="30" size="10" required
+                        title="Required. Enter your city name, 2-30 characters."
+                        onblur="validateCity(); saveToStorage('city')">
+                    <br><span class="error" id="cityError"></span>
+                </th>
+                <th>
+                <!-- API -->
+                    <label for="state">State</label>
+                    <select id="state" name="state" required title="Select your state from the dropdown list."
+                        onblur="validateState()" onchange="saveToStorage('state')">
+                    </select>
+                    <br><span class="error" id="stateError"></span>
+                </th>
+                <th>
+                    <label for="zip">ZIP</label>
+                    <input type="text" id="zip" name="zip" size="10" minlength="5" maxlength="10" required
+                        pattern="\d{5}(-\d{4})?"
+                        title="Required. Enter a 5-digit ZIP code or ZIP+4 format (e.g. 77002 or 77002-1234)."
+                        onblur="validateZip(); saveToStorage('zip')">
+                    <br><span class="error" id="zipError"></span>
+                </th>
+            </tr>
+
+            <!-- Email -->
+            <tr align="left">
+                <th><label for="email">Email Address</label></th>
+                <td colspan="3">
+                    <input type="email" id="email" name="email" required
+                        title="Enter a valid email address in the format name@domain.com"
+                        oninput="this.value=this.value.toLowerCase()" onblur="validateEmail(); saveToStorage('email')">
+                    <br><span class="error" id="emailError"></span>
+                </td>
+            </tr>
+
+            <!-- Phone -->
+            <tr align="left">
+                <th><label for="phone">Phone Number</label></th>
+                <td colspan="3">
+                    <input type="tel" id="phone" name="phone" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                        placeholder="123-456-7890" title="Enter your phone number in the format 123-456-7890." required
+                        onblur="validatePhone(); saveToStorage('phone')">
+                    <br><span class="error" id="phoneError"></span>
+                </td>
+            </tr>
+
+            <!-- Symptoms -->
+            <tr align="left">
+                <th><label for="desc">Symptoms</label></th>
+                <td colspan="3">
+                    <textarea id="desc" name="desc" rows="3" cols="50"
+                        title="Optional: describe any symptoms you are experiencing. No HTML tags allowed."
+                        onblur="validateDesc(); saveToStorage('desc')">
+                    </textarea>
+                    <br><span class="error" id="descError"></span>
+                </td>
+            </tr>
+
+            <!-- Allergies -->
+            <tr align="left">
+                <th><label>Allergies</label></th>
+                <td colspan="3">
+                    <input type="checkbox" id="allergy1" name="allergy1" value="Peanuts" onchange="saveCheckboxes()">
+                    <label for="allergy1">Peanuts</label><br>
+                    <input type="checkbox" id="allergy2" name="allergy2" value="Shellfish" onchange="saveCheckboxes()">
+                    <label for="allergy2">Shellfish</label><br>
+                    <input type="checkbox" id="allergy3" name="allergy3" value="Pollen" onchange="saveCheckboxes()">
+                    <label for="allergy3">Pollen</label><br>
+                    <input type="checkbox" id="otherallergy" name="other" value="other" onchange="saveCheckboxes()">
+                    <label for="otherallergy">Other</label><br>
+                    <input type="checkbox" id="none" name="none" value="none" onchange="saveCheckboxes()">
+                    <label for="none">None</label>
+                </td>
+            </tr>
+
+            <!-- Gender -->
+            <tr align="left">
+                <th><label>Gender</label></th>
+                <td colspan="3">
+                    <input type="radio" id="male" name="gender" value="male" onchange="saveToStorage('gender')">
+                    <label for="male">Male</label><br>
+                    <input type="radio" id="female" name="gender" value="female" onchange="saveToStorage('gender')">
+                    <label for="female">Female</label><br>
+                    <input type="radio" id="othergender" name="gender" value="other" onchange="saveToStorage('gender')">
+                    <label for="othergender">Other</label>
+                    <br><span class="error" id="genderError"></span>
+                </td>
+            </tr>
+
+            <!-- Vaccine -->
+            <tr align="left">
+                <th><label>Are you vaccinated?</label></th>
+                <td>
+                    <input type="radio" id="vaccineYes" name="vaccine" value="yes" onchange="saveToStorage('vaccine')">
+                    <label for="vaccineYes">Yes</label>
+                    <input type="radio" id="vaccineNo" name="vaccine" value="no" onchange="saveToStorage('vaccine')">
+                    <label for="vaccineNo">No</label>
+                    <br><span class="error" id="vaccineError"></span>
+                </td>
+            </tr>
+
+            <!-- Insurance -->
+            <tr align="left">
+                <th><label>Are you insured?</label></th>
+                <td>
+                    <input type="radio" id="insuranceYes" name="insurance" value="yes"
+                        onchange="saveToStorage('insurance')">
+                    <label for="insuranceYes">Yes</label>
+                    <input type="radio" id="insuranceNo" name="insurance" value="no"
+                        onchange="saveToStorage('insurance')">
+                    <label for="insuranceNo">No</label>
+                    <br><span class="error" id="insuranceError"></span>
+                </td>
+            </tr>
+
+            <!-- Slider -->
+            <tr align="left">
+                <th><label for="health">On a scale of 1 to 10,<br>how is your health?</label></th>
+                <td colspan="3">
+                    <div class="slidecontainer">
+                        <input type="range" min="1" max="10" value="5" class="slider" id="health" name="health"
+                            oninput="updateHealth(this.value)" onchange="saveToStorage('health')"
+                            title="Slide to rate your current health from 1 (poor) to 10 (excellent).">
+                        <span id="healthValue">5</span>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- User ID -->
+            <tr align="left">
+                <th><label for="userid">Desired User ID</label></th>
+                <td colspan="3">
+                    <input type="text" id="userid" name="userid" maxlength="20" required
+                        pattern="[A-Za-z][A-Za-z0-9_-]{4,19}"
+                        title="5-20 characters. Must start with a letter. Letters, numbers, underscores, and dashes only. No spaces."
+                        oninput="this.value=this.value.toLowerCase()"
+                        onblur="validateUserid(); saveToStorage('userid')">
+                    <br><span class="error" id="useridError"></span>
+                </td>
+            </tr>
+
+            <!-- Password -->
+            <tr align="left">
+                <th><label for="password">Password</label></th>
+                <td colspan="3">
+                    <input type="password" id="password" name="password" minlength="8" maxlength="30" required
+                        title="8-30 characters. Must include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character. No double quotes."
+                        oninput="validatePassword()" onblur="validatePassword()">
+                    <br><span class="error" id="passwordError"></span>
+                </td>
+            </tr>
+
+            <!-- Re-enter Password -->
+            <tr align="left">
+                <th><label for="repassword">Re-enter Password</label></th>
+                <td colspan="3">
+                    <input type="password" id="repassword" name="repassword" minlength="8" maxlength="30" required
+                        title="Re-enter your password exactly as you typed it above." oninput="validateRepassword()"
+                        onblur="validateRepassword()">
+                    <br><span class="error" id="repasswordError"></span>
+                </td>
+            </tr>
+
+            <!-- Remember Me -->
+            <tr align="left">
+                <th><label for="rememberMe">Remember Me</label></th>
+                <td colspan="3">
+                    <input type="checkbox" id="rememberMe" name="rememberMe" checked
+                        title="Check this to save your information for your next visit.">
+                    <label for="rememberMe">Save my information for next time</label>
+                </td>
+            </tr>
+
+        </table>
+
+        <!-- Buttons -->
+        <button type="button" onclick="reviewForm()">Review</button>
+        <button type="button" onclick="validateAll()">Validate</button>
+        <input type="submit" id="submitBtn" value="Submit" style="display:none;">
+        <input type="reset" value="Start Over" onclick="clearAllErrors(); clearStorage()">
+
+    </form>
+
+    <!-- Review Area -->
+    <div id="reviewArea">
+        <h2>PLEASE REVIEW THIS INFORMATION</h2>
+        <table style="width:100%; border-spacing: 0 8px;">
+            <tr>
+                <th align="left" style="width:25%;">Field</th>
+                <th align="left" style="width:50%;">Value</th>
+                <th align="left" style="width:25%;">Status</th>
+            </tr>
+            <tr>
+                <td><b>Name</b></td>
+                <td id="reviewName"></td>
+                <td id="reviewNameStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Date of Birth</b></td>
+                <td id="reviewDob"></td>
+                <td id="reviewDobStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Email</b></td>
+                <td id="reviewEmail"></td>
+                <td id="reviewEmailStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Phone</b></td>
+                <td id="reviewPhone"></td>
+                <td id="reviewPhoneStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Address</b></td>
+                <td id="reviewAddress"></td>
+                <td id="reviewAddressStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Allergies</b></td>
+                <td id="reviewAllergies"></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><b>Gender</b></td>
+                <td id="reviewGender"></td>
+                <td id="reviewGenderStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Vaccinated</b></td>
+                <td id="reviewVaccine"></td>
+                <td id="reviewVaccineStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Insured</b></td>
+                <td id="reviewInsurance"></td>
+                <td id="reviewInsuranceStatus"></td>
+            </tr>
+            <tr>
+                <td><b>Health Rating</b></td>
+                <td id="reviewHealth"></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><b>Symptoms</b></td>
+                <td id="reviewSymptoms"></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><b>User ID</b></td>
+                <td id="reviewUser"></td>
+                <td id="reviewUserStatus"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- FIXED FOOTER -->
+    <div id="footer">
+        <div class="footer-left">
+            <h4>Cougarville Doctors</h4>
+            <p>PO BOX 111111 | Houston, TX 77077</p>
+        </div>
+        <div class="footer-center">
+            <button onclick="window.location.href='footer.html'">CONTACT US</button>
+        </div>
+        <div class="footer-right">
+            <a href="https://www.facebook.com/">Facebook</a> |
+            <a href="https://x.com/">X</a> |
+            <a href="https://www.instagram.com/">Instagram</a>
+        </div>
+    </div>
+
+    <script src="hw4script.js"></script>
+</body>
+
+</html>
